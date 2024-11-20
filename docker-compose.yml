@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  myapp-backend:
+    build:
+      context: /home/sa/feenance-app/FinanceApp/
+    environment:
+      SECRET_KEY: TefDFRTEtyY%^$%
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: true
+      EMAIL_USE_SSL: false
+      EMAIL_HOST_USER: sliperx@gmail.com
+      EMAIL_HOST_PASSWORD: "Ehamory21380149228!@:"
+      DEFAULT_FROM_EMAIL: sliperx@gmail.com
+      PG_NAME: feenance
+      PG_USER: root
+      PG_PASSWORD: 123456
+      PG_HOST: 172.19.0.2
+      PG_PORT: 5432
+    ports:
+      - "6000:6000"
+    depends_on:
+      - myapp-postgres
+  myapp-postgres:
+    image: postgres:latest
+    environment:
+        POSTGRES_DB: feenance
+        POSTGRES_USER: root
+        POSTGRES_PASSWORD: 123456
+    ports:
+      - "5432:5432"
+  myapp-frontend:
+    build:
+      context: /home/sa/feenance-app-front/
+    ports:
+      - "3000:3000"
+    depends_on:
+      - myapp-postgres
+      - myapp-backend
+networks:
+  default:
+    driver: bridge
+    name: myapp-network
