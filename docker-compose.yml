@@ -3,7 +3,7 @@ version: '3.8'
 services:
   myapp-backend:
     build:
-      context: /home/sa/feenance-app/FinanceApp/
+      context: /home/sa/backend/FinanceApp/
     environment:
       SECRET_KEY: TefDFRTEtyY%^$%
       EMAIL_HOST: smtp.gmail.com
