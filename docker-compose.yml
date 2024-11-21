@@ -14,30 +14,61 @@ services:
       EMAIL_HOST_PASSWORD: "Ehamory21380149228!@:"
       DEFAULT_FROM_EMAIL: sliperx@gmail.com
       PG_NAME: feenance
-      PG_USER: root
+      PG_USER: feenance
       PG_PASSWORD: 123456
       PG_HOST: 172.19.0.2
       PG_PORT: 5432
     ports:
       - "6000:6000"
     depends_on:
-      - myapp-postgres
-  myapp-postgres:
+      - myapp-postgres-master 
+  myapp-postgres-master:
     image: postgres:latest
     environment:
-        POSTGRES_DB: feenance
-        POSTGRES_USER: root
-        POSTGRES_PASSWORD: 123456
+      POSTGRES_PGAUDIT_LOG: READ,WRITE
+      POSTGRES_LOG_HOSTNAME: true
+      POSTGRES_REPLICATION_MODE: master
+      POSTGRES_REPLICATION_USER: repl_user
+      POSTGRES_REPLICATION_PASSWORD: 123456
+      POSTGRES_USER: feenance
+      POSTGRES_DB: feenance
+      POSTGRES_PASSWORD: 123456
     ports:
       - "5432:5432"
+  myapp-postgres-slave:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: feenance
+      POSTGRES_PASSWORD: 123456
+      POSTGRES_MASTER_HOST: myapp-postgres-master
+      POSTGRES_PGAUDIT_LOG: READ,WRITE
+      POSTGRES_LOG_HOSTNAME: true
+      POSTGRES_REPLICATION_MODE: slave
+      POSTGRES_REPLICATION_USER: repl_user
+      POSTGRES_REPLICATION_PASSWORD: 123456
+      POSTGRES_MASTER_PORT_NUMBER: 5432
+    depends_on:
+      - myapp-postgres-master
+    ports:
+      - "5433:5432"
   myapp-frontend:
     build:
       context: /home/sa/feenance-app-front/
     ports:
       - "3000:3000"
     depends_on:
-      - myapp-postgres
+      - myapp-postgres-master
       - myapp-backend
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - 9187:9187
+    #volumes:
+    #- ./postgres_exporter.yml:/etc/postgres_exporter.yml
+    environment:
+      DATA_SOURCE_URI: "myapp-postgres-master:5432/feenance?sslmode=disable"
+      DATA_SOURCE_USER: feenance 
+      DATA_SOURCE_PASS: 123456
 networks:
   default:
     driver: bridge
