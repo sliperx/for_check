@@ -16,7 +16,7 @@ services:
       PG_NAME: feenance
       PG_USER: feenance
       PG_PASSWORD: 123456
-      PG_HOST: 172.19.0.2
+      PG_HOST: myapp-postgres-master
       PG_PORT: 5432
     ports:
       - "6000:6000"
