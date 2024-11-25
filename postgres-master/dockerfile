@@ -1,0 +1,8 @@
+FROM bitnami/postgresql-repmgr:13-debian-12
+COPY PostgresMaster/postgresMaster.sh /docker-entrypoint-initdb.d/postgresMaster.sh
+RUN chmod 0666 /docker-entrypoint-initdb.d/postgresMaster.sh
+COPY --chown=postgres:postgres PostgresqlDict/* /usr/share/postgresql/14/tsearch_data/
+
+#based on https://github.com/pgvector/pgvector/ v0.7.4
+COPY /PgVector/vector.so /usr/lib/postgresql/14/lib
+COPY /PgVector/vector_control/* /usr/share/postgresql/14/extension
