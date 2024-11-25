@@ -1,0 +1,99 @@
+version: '3.8'
+
+services:
+  myapp-backend:
+    build:
+      context: /home/sa/backend/FinanceApp/
+    environment:
+      SECRET_KEY: TefDFRTEtyY%^$%
+      EMAIL_HOST: smtp.gmail.com
+      EMAIL_PORT: 587
+      EMAIL_USE_TLS: true
+      EMAIL_USE_SSL: false
+      EMAIL_HOST_USER: sliperx@gmail.com
+      EMAIL_HOST_PASSWORD: "Ehamory21380149228!@:"
+      DEFAULT_FROM_EMAIL: sliperx@gmail.com
+      PG_NAME: feenance
+      PG_USER: feenance
+      PG_PASSWORD: 123456
+      PG_HOST: 172.19.0.2
+      PG_PORT: 5432
+    ports:
+      - "6000:6000"
+    depends_on:
+      - myapp-postgres-master 
+  myapp-postgres-master:
+    image: bitnami/postgresql-repmgr:latest
+    container_name: master-1
+    volumes:
+      - /data/postgresql_master/:/var/lib/postgresql/data
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=123456
+      - POSTGRESQL_USERNAME=feenance
+      - POSTGRESQL_PASSWORD=123456
+      - POSTGRESQL_DATABASE=feenance
+      - REPMGR_NODE_ID=1
+      - REPMGR_PASSWORD=123456
+      - REPMGR_PRIMARY_HOST=myapp-postgres-master
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=myapp-postgres-master,myapp-postgres-slave:5432
+      - REPMGR_NODE_NAME=myapp-postgres-master-1
+      - REPMGR_NODE_NETWORK_NAME=myapp-postgres-master
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+  myapp-postgres-slave:
+    image: bitnami/postgresql-repmgr:latest
+    container_name: slave-1
+    volumes:
+      - /data/postgresql_slave/:/var/lib/postgresql/data
+    environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=123456
+      - POSTGRESQL_USERNAME=feenance
+      - POSTGRESQL_PASSWORD=123456
+      - POSTGRESQL_DATABASE=feenance
+      - REPMGR_NODE_ID=2
+      - REPMGR_PASSWORD=123456
+      - REPMGR_PRIMARY_HOST=myapp-postgres-master
+      - REPMGR_PRIMARY_PORT=5432
+      - REPMGR_PARTNER_NODES=myapp-postgres-master,myapp-postgres-slave:5432
+      - REPMGR_NODE_NAME=myapp-postgres-slave-1
+      - REPMGR_NODE_NETWORK_NAME=myapp-postgres-slave
+      - REPMGR_PORT_NUMBER=5432
+      - REPMGR_CONNECT_TIMEOUT=1
+      - REPMGR_RECONNECT_ATTEMPTS=2
+      - REPMGR_RECONNECT_INTERVAL=1
+      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+    depends_on:
+      - myapp-postgres-master
+    ports:
+      - "5433:5432"
+  myapp-frontend:
+    build:
+      context: /home/sa/frontend/Finance_frontend/
+    ports:
+      - "3000:3000"
+    depends_on:
+      - myapp-postgres-master
+      - myapp-backend
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    ports:
+      - 9187:9187
+    #volumes:
+    #- ./postgres_exporter.yml:/etc/postgres_exporter.yml
+    environment:
+      DATA_SOURCE_URI: "myapp-postgres-master:5432/feenance?sslmode=disable"
+      DATA_SOURCE_USER: feenance 
+      DATA_SOURCE_PASS: 123456
+    depends_on:
+      - myapp-postgres-master
+networks:
+  default:
+    driver: bridge
+    name: myapp-network
