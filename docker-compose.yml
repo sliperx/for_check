@@ -23,54 +23,27 @@ services:
     depends_on:
       - myapp-postgres-master 
   myapp-postgres-master:
-    image: bitnami/postgresql-repmgr:latest
+    image: bitnami/postgresql-repmgr:17.2.0
+      #user: root
     container_name: master-1
     volumes:
-      - /data/postgresql_master/:/var/lib/postgresql/data
-    environment:
-      - POSTGRESQL_POSTGRES_PASSWORD=123456
-      - POSTGRESQL_USERNAME=feenance
-      - POSTGRESQL_PASSWORD=123456
-      - POSTGRESQL_DATABASE=feenance
-      - REPMGR_NODE_ID=1
-      - REPMGR_PASSWORD=123456
-      - REPMGR_PRIMARY_HOST=myapp-postgres-master
-      - REPMGR_PRIMARY_PORT=5432
-      - REPMGR_PARTNER_NODES=myapp-postgres-master,myapp-postgres-slave:5432
-      - REPMGR_NODE_NAME=myapp-postgres-master-1
-      - REPMGR_NODE_NETWORK_NAME=myapp-postgres-master
-      - REPMGR_PORT_NUMBER=5432
-      - REPMGR_CONNECT_TIMEOUT=1
-      - REPMGR_RECONNECT_ATTEMPTS=2
-      - REPMGR_RECONNECT_INTERVAL=1
-      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+      - /data/postgresql_master:/opt/bitnami/postgresql/data/
+    env_file: 
+      - path: ./postgres-master/my_env.env
     restart: unless-stopped
     ports:
       - "5432:5432"
   myapp-postgres-slave:
-    image: bitnami/postgresql-repmgr:latest
+    image: bitnami/postgresql-repmgr:17.2.0
+      #user: root
     container_name: slave-1
     volumes:
-      - /data/postgresql_slave/:/var/lib/postgresql/data
-    environment:
-      - POSTGRESQL_POSTGRES_PASSWORD=123456
-      - POSTGRESQL_USERNAME=feenance
-      - POSTGRESQL_PASSWORD=123456
-      - POSTGRESQL_DATABASE=feenance
-      - REPMGR_NODE_ID=2
-      - REPMGR_PASSWORD=123456
-      - REPMGR_PRIMARY_HOST=myapp-postgres-master
-      - REPMGR_PRIMARY_PORT=5432
-      - REPMGR_PARTNER_NODES=myapp-postgres-master,myapp-postgres-slave:5432
-      - REPMGR_NODE_NAME=myapp-postgres-slave-1
-      - REPMGR_NODE_NETWORK_NAME=myapp-postgres-slave
-      - REPMGR_PORT_NUMBER=5432
-      - REPMGR_CONNECT_TIMEOUT=1
-      - REPMGR_RECONNECT_ATTEMPTS=2
-      - REPMGR_RECONNECT_INTERVAL=1
-      - REPMGR_MASTER_RESPONSE_TIMEOUT=5
+      - /data/postgresql_slave:/opt/bitnami/postgresql/data/
+    env_file: 
+      - path: ./postgres-slave/my_env.env
     depends_on:
       - myapp-postgres-master
+    restart: always
     ports:
       - "5433:5432"
   myapp-frontend:
@@ -81,18 +54,18 @@ services:
     depends_on:
       - myapp-postgres-master
       - myapp-backend
-  postgres-exporter:
-    image: prometheuscommunity/postgres-exporter:latest
-    ports:
-      - 9187:9187
+        #postgres-exporter:
+        #image: prometheuscommunity/postgres-exporter:latest
+        #ports:
+        #- 9187:9187
     #volumes:
     #- ./postgres_exporter.yml:/etc/postgres_exporter.yml
-    environment:
-      DATA_SOURCE_URI: "myapp-postgres-master:5432/feenance?sslmode=disable"
-      DATA_SOURCE_USER: feenance 
-      DATA_SOURCE_PASS: 123456
-    depends_on:
-      - myapp-postgres-master
+    #environment:
+    # DATA_SOURCE_URI: "myapp-postgres-master:5432/feenance?sslmode=disable"
+    #  DATA_SOURCE_USER: feenance 
+    #  DATA_SOURCE_PASS: 123456
+    #depends_on:
+    #  - myapp-postgres-master
 networks:
   default:
     driver: bridge
